@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AddBookView: View {
     @Environment(\.modelContext) var modelContext
+    @Environment(\.dismiss) var dismiss
     
     @State private var title = ""
     @State private var author = ""
@@ -34,6 +35,7 @@ struct AddBookView: View {
                 
                 Section("Write a review") {
                     TextEditor(text: $review)
+                    RatingView(rating: $rating)
                     
                     Picker("Rating", selection: $rating) {
                         ForEach(0..<6) {
@@ -46,6 +48,8 @@ struct AddBookView: View {
                     Button("Add") {
                         let newBook = Book(title: title, author: author, genre: genre, review: review, rating: rating)
                         modelContext.insert(newBook)
+                        
+                        dismiss()
                     }
                 }
             }
