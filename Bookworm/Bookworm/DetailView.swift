@@ -21,7 +21,7 @@ struct DetailView: View {
                 Image(book.genre)
                     .resizable()
                     .scaledToFill()
-                    
+                
                 Text(book.genre.uppercased())
                     .font(.caption)
                     .fontWeight(.black)
@@ -41,6 +41,11 @@ struct DetailView: View {
             
             RatingView(rating: .constant(book.rating))
                 .font(.largeTitle)
+            
+            Text(book.date, style: .date)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .padding()
         }
         .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
