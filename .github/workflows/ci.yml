@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+    
+    strategy:
+      matrix:
+        platform: [iOS, macOS]
+        include:
+          - platform: iOS
+            destination: 'platform=iOS Simulator,name=iPhone 15,OS=latest'
+            scheme: Bookworm
+          - platform: macOS
+            destination: 'platform=macOS'
+            scheme: Bookworm
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Show Xcode version
+      run: xcodebuild -version
+
+    - name: Cache derived data
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-derived-data-${{ hashFiles('**/project.pbxproj') }}
+        restore-keys: |
+          ${{ runner.os }}-derived-data-
+
+    - name: Build for ${{ matrix.platform }}
+      run: |
+        cd Bookworm
+        xcodebuild -project Bookworm.xcodeproj \
+          -scheme ${{ matrix.scheme }} \
+          -destination '${{ matrix.destination }}' \
+          -configuration Release \
+          build
+
+    - name: Test for ${{ matrix.platform }}
+      run: |
+        cd Bookworm
+        xcodebuild -project Bookworm.xcodeproj \
+          -scheme ${{ matrix.scheme }} \
+          -destination '${{ matrix.destination }}' \
+          -configuration Debug \
+          test
+      continue-on-error: true # Allow tests to fail initially if no tests exist
+
+  lint:
+    name: Swift Lint
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install SwiftLint
+      run: |
+        brew install swiftlint
+
+    - name: Run SwiftLint
+      run: |
+        cd Bookworm
+        swiftlint --strict
+      continue-on-error: true # Don't fail the build on lint warnings initially
+
+  security-scan:
+    name: Security Scan
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Security Scan
+      run: |
+        cd Bookworm
+        # Check for common security issues in Swift code
+        grep -r "UIWebView\|NSAllowsArbitraryLoads\|NSExceptionDomains" . || true
+        # Check for hardcoded secrets (basic check)
+        grep -r "password\|secret\|key\|token" --include="*.swift" . || true
+      continue-on-error: true

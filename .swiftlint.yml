@@ -1,0 +1,39 @@
+disabled_rules: # Rule identifiers to exclude from running
+  - colon
+  - comma
+  - control_statement
+opt_in_rules: # Some rules are turned off by default, so you need to opt-in
+  - empty_count
+  - missing_docs
+  - file_header
+included: # Paths to include during linting
+  - Bookworm
+excluded: # Paths to ignore during linting
+  - Carthage
+  - Pods
+  - .build
+  - DerivedData
+analyzer_rules: # Rules run by `swiftlint analyze`
+  - explicit_self
+
+# Configurable rules can be customized from this configuration file
+line_length: 120
+type_body_length: 300
+file_length: 500
+function_body_length: 60
+
+# Naming rules
+type_name:
+  min_length: 3 # Only warning
+  max_length: # Warning and error
+    warning: 40
+    error: 50
+identifier_name:
+  min_length: # Only min_length
+    error: 3 # Only error
+  excluded: # Excluded via string array
+    - id
+    - URL
+    - url
+
+reporter: "xcode" # Reporter type (xcode, json, csv, checkstyle, codeclimate, junit, html, emoji, sonarqube, markdown, github-actions-logging)
